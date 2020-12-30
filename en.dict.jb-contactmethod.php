@@ -16,6 +16,7 @@ Dict::Add('EN US', 'English', 'English', array(
     //	'Class:SomeClass/Attribute:some_attribute/Value:some_value+' => 'your translation for more info on the value',
 	
 	'Class:Person/Attribute:contactmethods_list' => 'Contact methods',
+	'Class:Person/Attribute:contactmethods_list+' => 'Overview of contact methods related to this person.',
 	
 	'Class:ContactMethod/Attribute:person_id' => 'Person',
 	'Class:ContactMethod/Attribute:contact_method' => 'Contact method',
