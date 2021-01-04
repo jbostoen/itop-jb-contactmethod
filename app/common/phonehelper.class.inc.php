@@ -6,52 +6,138 @@
  * @version     2020-12-02 13:56:48
  * @experimental
  *
- * Defines class PhoneHelper, which offers some methods to validate phone numbers. Warning: specifically for Belgian use.
+ * Defines classes for phone number validation, which offers some methods to validate phone numbers. Warning: specifically for Belgian use.
  *
  */
  
  namespace jb_itop_extensions\contact_method;
- 
+	
 	/**
-	 * Class PhoneHelper. Provides some phone functions.
+	 * Class which is able to validate phone numbers.
 	 */
-	abstract class PhoneHelper {
+	class PhoneNumberValidator {
+		
+		/** @var \String $sDigitsOnly Only digits */
+		public $sDigitsOnly;
+		
+		/** @var \String $sOriginalNumber Original phone number */
+		public $sOriginalNumber;
+		
 		
 		/**
-		 * Returns whether this is a local phone number
-		 *
-		 * @param \String $sPhone Phone number
-		 *
-		 * @return \Boolean
+		 * Constructor for phone number validator. Immediately keeps a copy of only the digits.
+		 * 
+		 * @param \String $sPhoneNumber Phone number as specified by the user
+		 * @return void
+		 * 
 		 */
-		public static function IsLocal($sPhone) {
-			$sPhone = self::ReturnDigits($sPhone);
-			return (substr($sPhone, 0, 1) == '0' || substr($sPhone, 0, 2) == '32');
+		function __construct($sPhoneNumber) {
+			$this->sOriginalNumber = $sPhoneNumber;
+			$this->sDigitsOnly = preg_replace('/[^\d]/', '', $this->sOriginalNumber);
 		}
 		
 		/**
-		 * Returns whether this is a valid prefix for a Belgian mobile phone number
+		 * Gets a number without digits.
+		 * 
+		 * @param \String Returns only the digits of the specified number.
+		 * @return void
+		 * 
+		 */
+		public function GetDigits() {
+			return $this->sDigitsOnly;
+		}
+		
+		/**
+		 * Checks whether the phone number only contains allowed characters
+		 * 
+		 * @return \Boolean
+		 * 
+		 */
+		public function ContainsOnlyAllowedCharacters() {
+			// Could start with +countrycode
+			// Starts with zonal code
+			// Might contain spaces
+			// Often a slash, but not required
+			// Then numbers, sometimes with a space or dot in between
+			return preg_match('/^(+|)[0-9 \.\/]{1,}$/', $this->sOriginalNumber);
+		}
+		
+	}
+
+
+	/**
+	 * Class which is able to validate Belgian phone numbers.
+	 */
+	class BelgianPhoneNumberValidator extends PhoneNumberValidator {
+		
+		/**
+		 * @var \Integer $iCountryCode Country code
+		 */
+		public $iCountryCode = 32;
+		
+		/**
+		 * @var \Integer $iDigitsMobile Max number of digits for a land line number, excluding country code or starting 0
+		 */
+		public $iDigitsLandLine = 8;
+		
+		/**
+		 * @var \Integer $iDigitsMobile Max number of digits for a mobile number, excluding country code or starting 0
+		 */
+		public $iDigitsMobile = 9;
+		
+		/**
+		 * Constructor for phone number validator. Immediately keeps a copy of only the digits.
+		 * 
+		 * @param \String $sPhoneNumber Phone number as specified by the user
+		 * @return void
+		 * 
+		 */
+		function __construct($sPhoneNumber) {
+
+			parent::__construct($sPhoneNumber);
+			$this->sDigitsOnlyWithoutCountryPrefix = preg_replace('/^(0|'.$this->iCountryCode.')/', '', $this->sDigitsOnly);
+			
+		}
+		
+		/**
+		 * Returns only the local digits. No +32 or 0
+		 * 
+		 * @return \String Local digits
+		 * 
+		 */
+		public function GetLocalDigits() {
+		
+			// Adapted to Belgian situation
+			return $this->sDigitsOnlyWithoutCountryPrefix;
+			
+		}
+		
+		/**
+		 * Returns whether this is has a valid country code (or 0)
+		 *
+		 * @return \Boolean
+		 */
+		public function HasValidBelgianCountryPrefix() {
+			return (Bool)preg_match('/^(0|32)/', $this->GetDigits());
+		}
+		
+		/**
+		 * Returns whether this has a mobile prefix for a Belgian mobile phone number
 		 *
 		 * @param \String $sPhone Phone number
 		 *
 		 * @return \Boolean
 		 */
-		public static function IsMobilePrefix_BE($sPhone) {
+		public function HasValidBelgianMobilePrefix() {
 			
 			// https://www.bipt.be/en/consumers/telephone/numbering/numbering-principles
 			// 046, 047, 048, 049
 			// 04 = land line too, Liège and Voeren. Less digits!
-			// That's why we check for the first 2 digits.
+			// Hence a check for the first 2 digits and the total number of digits.			
 			
-			// Strip leading country code, zero
-			$sPhone = self::ReturnDigitsWithoutLocalDigits_BE($sPhone);		
-			
-			switch( substr($sPhone, 0, 2) ) {
-				case '46':
-				case '47':
-				case '48':
-				case '49':
-					return ( strlen($sPhone) == 9 );
+			switch(true) {
+				case preg_match('/^(46|47|48|49)/', $this->sDigitsOnlyWithoutCountryPrefix) && $this->HasValidNumberOfDigitsMobileNumber():
+					return true;
 					break;
 					
 				default:
@@ -64,137 +150,65 @@
 		}
 		
 		/**
-		 * Returns whether this is a valid Belgian phone number (land line) (based on length)
-		 *
-		 * @param \String $sPhone Phone number
-		 *
+		 * Returns whether this is a valid Belgian phone number.
+		 * 
+		 * @param \Boolean $bStrict Optional setting to also enforce use of only valid characters. Defaults to false.
+		 * 
 		 * @return \Boolean
+		 * 
 		 */
-		public static function IsValidLandLinePhone_BE($sPhone) {
-		
-			// No use if invalid characters are found
-			if(self::OnlyContainsAllowedCharacters($sPhone) == false) {
+		public function IsValidBelgianNumber($bStrict = false) {
+			
+			if($bStrict == true && $this->ContainsOnlyAllowedCharacters() == false) {
 				return false;
 			}
 			
-			$sPhone = self::ReturnDigitsWithoutLocalDigits_BE($sPhone);
-			return (strlen($sPhone) == 8);
-
+			return ($this->IsValidBelgianLandLineNumber() == true || $this->IsValidBelgianMobileNumber() == true);
 		}
 		
-		
 		/**
-		 * Returns whether this is a valid phone number (based on length)
-		 *
-		 * @param \String $sPhone Phone number
-		 *
+		 * Returns whether this is a valid Belgian phone number.
+		 * 
 		 * @return \Boolean
+		 * 
 		 */
-		public static function IsValidPhone($sPhone) {	
-		
-			// No use if invalid characters are found
-			if(self::OnlyContainsAllowedCharacters($sPhone) == false) {
-				return false;
-			}
-			
-			// If (significant digits) = (significant digits of Belgium phone): 
-			// Assume a Belgian phone number has been specified. Stricter requirements.
-			$sPhone_digits = self::ReturnDigits($sPhone);
-						
-			if(strlen($sPhone_digits) != strlen(self::ReturnDigitsWithoutLocalDigits_BE($sPhone))) {
-				// Belgian; more strict requirements
-				return self::IsValidPhone_BE($sPhone);
-			}
-			elseif(strlen($sPhone_digits) > 10) {
-				// International number, should have been prefixed
-				// Phone number can only contain certain characters
-				return true;
-			}
-			
-			return false;
-	
+		public function IsValidBelgianLandLineNumber() {
+			// 1) must have a Belgian country code or 0
+			// 2) must have a length of 8 non-country digits
+			return ($this->HasValidBelgianCountryPrefix() == true && $this->HasValidNumberOfDigitsLandLineNumber() == true);
 		}
-	
+		
 		/**
-		 * Returns whether this is a valid Belgian mobile phone number (based on length)
-		 *
-		 * @param \String $sPhone Phone number
-		 *
+		 * Returns whether this is a valid Belgian phone number.
+		 * 
 		 * @return \Boolean
+		 * 
 		 */
-		public static function IsValidMobilePhone_BE($sMobilePhone) {
-			
-			$sMobilePhone_significant_digits = self::ReturnDigitsWithoutLocalDigits_BE($sMobilePhone);
-			return (self::OnlyContainsAllowedCharacters($sMobilePhone) == true && strlen($sMobilePhone_significant_digits) == 9 && self::IsMobilePrefix_BE($sMobilePhone) == true);
-					
+		public function IsValidBelgianMobileNumber() {
+			// 1) must have a Belgian country code or 0
+			// 2) must have a valid Belgian mobile prefix
+			// 3) must have a length of 9 non-country digits
+			return ($this->HasValidBelgianCountryPrefix() == true && $this->HasValidBelgianMobilePrefix() == true && $this->HasValidNumberOfDigitsMobileNumber() == true);
 		}
 		
 		/**
-		 * Returns whether this is a valid Belgian phone number (land line or mobile)
-		 *
-		 * @param \String $sPhone Phone number
-		 *
+		 * Returns whether the number of digits for a land line number is correct
+		 * 
 		 * @return \Boolean
+		 * 
 		 */
-		public static function IsValidPhone_BE($sPhone) {
-			return (self::IsValidLandLinePhone_BE($sPhone) == true || self::IsValidMobilePhone_BE($sPhone) == true);
+		public function HasValidNumberOfDigitsLandLineNumber() {
+			return (strlen($this->sDigitsOnlyWithoutCountryPrefix) == $this->iDigitsLandLine);
 		}
 		
 		/**
-		 * Checks if only allowed characters are used.
-		 *
-		 * @param \String $sPhone Phone number
-		 *
+		 * Returns whether the number of digits for a mobile number is correct
+		 * 
 		 * @return \Boolean
+		 * 
 		 */
-		public static function OnlyContainsAllowedCharacters($sPhone) {
-			// Only keep listed characters
-			return preg_match('/^(\+|)([0-9 ]{1,})(\/|)([0-9 \.]{1,})$/', $sPhone);
-		}
-	
-		/**
- 		 * Returns digits only.
- 		 *
- 		 * @param \String $sPhone Phone number
- 		 *
- 		 * @return \String Digits only of provided string (phone number)
- 		 */
-		public static function ReturnDigits($sPhone) {
-			// Only keep digits
-			return preg_replace('/[\d]/', '', $sPhone);		
-		
-		}
-		
-		/**
-		 * Returns significant digits only (meaning: no leading zero and no national number if Belgian phone number)
-		 *
-		 * @param \String $sPhone Phone number
-		 *
-		 * @return \String Digits only of provided string (phone number)
-		 *
-		 * @details Significant details: the ones which make up the zone number (or mobile prefix), without leading zero and without (Belgian) country code
-		 */
-		public static function ReturnDigitsWithoutLocalDigits_BE($sPhone) {
-		
-			$sPhone = self::ReturnDigits($sPhone);
-			
-			// Adapted to Belgian situation
-			if(substr($sPhone, 0, 2) == '32') {
-				
-				// 32 47x xx xx xx
-				// 32 51 xx xx xx
-				return substr($sPhone, 2);
-			
-			}
-			elseif(substr($sPhone, 0, 1) == '0') {
-				
-				// Remove leading zero
-				return substr($sPhone, 1);
-				
-			}
-			
+		public function HasValidNumberOfDigitsMobileNumber() {
+			return (strlen($this->sDigitsOnlyWithoutCountryPrefix) == $this->iDigitsMobile);
 		}
 		
 	}
-	
-	

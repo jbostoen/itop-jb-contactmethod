@@ -25,8 +25,8 @@ Dict::Add('NL NL', 'Dutch', 'Dutch', array(
 	'Class:ContactMethod/Attribute:contact_method/Value:email' => 'E-mailadres',
 	'Class:ContactMethod/Attribute:contact_detail' => 'Contactgegeven',
 	
-	'Errors/ContactMethod/InvalidPhoneNumber' => 'Ongeldig telefoonnummer. Nationale nummers bestaan uit 9 tekens (of 10 als de landprefix opgegeven werd).',
-	'Errors/ContactMethod/InvalidMobilePhoneNumber' => 'Ongeldig telefoonnummer. Nationale nummers bestaan uit 10 tekens (of 11 als de landprefix opgegeven werd).',
+	'Errors/ContactMethod/InvalidPhoneNumber' => 'Ongeldig telefoonnummer.',
+	'Errors/ContactMethod/InvalidMobilePhoneNumber' => 'Ongeldig mobiel nummer.',
 	'Errors/ContactMethod/InvalidEmail' => 'Ongeldig e-mailadres.',
 	
 ));

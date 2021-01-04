@@ -25,8 +25,8 @@ Dict::Add('EN US', 'English', 'English', array(
 	'Class:ContactMethod/Attribute:contact_method/Value:email' => 'Email',
 	'Class:ContactMethod/Attribute:contact_detail' => 'Contact detail',
 	
-	'Errors/ContactMethod/InvalidPhoneNumber' => 'Invalid phone number. National numbers should consist of 9 digits. If country prefix is used, it should be 10 digits.',
-	'Errors/ContactMethod/InvalidMobilePhoneNumber' => 'Invalid mobile phone number. National numbers should consist of 10 digits. If country prefix is used, it should be 11 digits.',
+	'Errors/ContactMethod/InvalidPhoneNumber' => 'Invalid phone number.',
+	'Errors/ContactMethod/InvalidMobilePhoneNumber' => 'Invalid mobile phone number.',
 	'Errors/ContactMethod/InvalidEmail' => 'Invalid email address.',
 	
 ));
