@@ -11,9 +11,9 @@ Please get in touch to discuss the terms: **jbostoen.itop@outlook.com**
 
 
 ## What?
-Adds a contact methods tab to a Contact. Can easily be extended to support all sorts of data. Dropdown to pick method (e.g. phone, email, social media) and a basic text box (255 chars)
+Adds a contact methods tab to a Contact. 
+Can easily be extended to support all sorts of data. Dropdown to pick method (e.g. phone, email, social media) and a basic text box (255 characters).
 
-Based on the situation in Belgium (length of phone numbers).
 
 ## Cookbook
 
