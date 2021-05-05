@@ -171,32 +171,36 @@ class ApplicationObjectExtension_ContactMethod implements iApplicationObjectExte
 			foreach($aContactMethods as $sContactMethod) {
 				
 				// Is updated? If not, just try next method
-				if(in_array($sContactMethod, $aUpdatedAttCodes) == false) {
-					continue;
-				}
-				
-				$sContactDetail = $oPerson->Get($sContactMethod);
-				
-				// Did the previous e-mail already exist?
-				$sOQL = 'SELECT ContactMethod WHERE person_id = :person_id AND contact_method LIKE :contact_method AND contact_detail LIKE :contact_detail';
-				$oSet_OldContactMethods = new DBObjectSet(DBObjectSearch::FromOQL($sOQL), [], [
-					'person_id' => $oPerson->GetKey(),
-					'contact_method' => $sContactMethod,
-					'contact_detail' => $aUpdatedAttCodes[$sContactMethod]
-				]);
-				
-				$oOldContactMethod = $oSet_OldContactMethods->Fetch();
-				
-				if($oOldContactMethod === null) {
-					// Legacy info, but contact method did not exist before as an object!
-					// Create ContactMethod
-					$oOldContactMethod = MetaModel::NewObject('ContactMethod', [
+				if(in_array($sContactMethod, $aUpdatedAttCodes) == true) {
+					
+					// Did the previous contact details already exist as a ContactMethod?
+					$sOQL = 'SELECT ContactMethod WHERE person_id = :person_id AND contact_method LIKE :contact_method AND contact_detail LIKE :contact_detail';
+					$oSet_OldContactMethods = new DBObjectSet(DBObjectSearch::FromOQL($sOQL), [], [
 						'person_id' => $oPerson->GetKey(),
 						'contact_method' => $sContactMethod,
-						'contact_detail' => $sContactDetail
+						'contact_detail' => $aUpdatedAttCodes[$sContactMethod]
 					]);
-					$oOldContactMethod->DBInsert();	
+					
+					$oOldContactMethod = $oSet_OldContactMethods->Fetch();
+										
+					// The contact method did not exist yet.
+					// Save the previous contact method.
+					// Save this for historical reasons.
+					if($oOldContactMethod === null) {
+						
+						$oOldContactMethod = MetaModel::NewObject('ContactMethod', [
+							'person_id' => $oPerson->GetKey(),
+							'contact_method' => $sContactMethod,
+							'contact_detail' =>$aUpdatedAttCodes[$sContactMethod]
+						]);
+						$oOldContactMethod->DBInsert();	
+						
+					}
+					
 				}
+				
+				// Current contact detail	
+				$sContactDetail = $oPerson->Get($sContactMethod);
 			
 				// Should a new ContactMethod be created?
 				if($sContactMethod == 'phone' && $sContactDetail == '+00 000 000 000') {
