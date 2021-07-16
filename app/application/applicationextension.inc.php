@@ -178,7 +178,7 @@ class ApplicationObjectExtension_ContactMethod implements iApplicationObjectExte
 					$oSet_OldContactMethods = new DBObjectSet(DBObjectSearch::FromOQL($sOQL), [], [
 						'person_id' => $oPerson->GetKey(),
 						'contact_method' => $sContactMethod,
-						'contact_detail' => $aUpdatedAttCodes[$sContactMethod]
+						'contact_detail' => $aPreviousValues[$sContactMethod]
 					]);
 					
 					$oOldContactMethod = $oSet_OldContactMethods->Fetch();
@@ -191,7 +191,7 @@ class ApplicationObjectExtension_ContactMethod implements iApplicationObjectExte
 						$oOldContactMethod = MetaModel::NewObject('ContactMethod', [
 							'person_id' => $oPerson->GetKey(),
 							'contact_method' => $sContactMethod,
-							'contact_detail' =>$aUpdatedAttCodes[$sContactMethod]
+							'contact_detail' =>$aPreviousValues[$sContactMethod]
 						]);
 						$oOldContactMethod->DBInsert();	
 						
