@@ -3,7 +3,7 @@
 /**
  * @copyright   Copyright (C) 2019 Jeffrey Bostoen
  * @license     https://www.gnu.org/licenses/gpl-3.0.en.html
- * @version     2020-12-02 13:56:48
+ * @version     2.6.210803
  *
  * PHP Main file
  */
@@ -37,7 +37,7 @@ class ApplicationObjectExtension_ContactMethod implements iApplicationObjectExte
 	 */	
 	public function OnCheckToWrite($oObject) {
 		
-		// No errors		
+		// Return errors		
 		return [];
 				
 	}	
@@ -83,7 +83,7 @@ class ApplicationObjectExtension_ContactMethod implements iApplicationObjectExte
 	 * @return void
 	 */	
 	public function OnDBUpdate($oObject, $oChange = null) {
-		$this->OnContactMethodChanged($oObject);
+		$this->AfterContactMethodChanged($oObject);
 		return;
 	}
 
@@ -97,7 +97,7 @@ class ApplicationObjectExtension_ContactMethod implements iApplicationObjectExte
 	 * @return void
 	 */	
 	public function OnDBInsert($oObject, $oChange = null) {
-		$this->OnContactMethodChanged($oObject);
+		$this->AfterContactMethodChanged($oObject);
 		return;
 	}
 
@@ -111,7 +111,7 @@ class ApplicationObjectExtension_ContactMethod implements iApplicationObjectExte
 	 * @return void
 	 */	
 	public function OnDBDelete($oObject, $oChange = null) {
-		$this->OnContactMethodDeleted($oObject);
+		$this->AfterContactMethodDeleted($oObject);
 		return;
 	}
 	
@@ -122,103 +122,66 @@ class ApplicationObjectExtension_ContactMethod implements iApplicationObjectExte
 	 * Triggered on both insert and update.
 	 *
 	 */
-	public function OnContactMethodChanged($oObject) {
-		
-		// If a ContactMethod changed, validate and port back to Person object
-		if($oObject instanceof ContactMethod) {
-			
-			$oContactMethod = $oObject;
-			$sContactMethod = $oContactMethod->Get('contact_method');
-			$sContactDetail = $oContactMethod->Get('contact_detail');
-						
-			// Might have been changed above (from phone to mobile_phone , from mobile_phone to phone )
-			// This should be updated properly in Person object.
-			
-			// Write back to Person
-			if(in_array($sContactMethod, ['phone', 'mobile_phone', 'email']) == true) {
-				
-				// Write back to Person. Latest change should be primary.						
-				$sOQL = 'SELECT Person WHERE id = :person_id';
-				$oSet_Person = new DBObjectSet(DBObjectSearch::FromOQL($sOQL), [], [
-					'person_id' => $oContactMethod->Get('person_id')
-				]);
-							
-				// Only 1 person will be retrieved (assuming person_id was valid)
-				$oPerson = $oSet_Person->Fetch();
-				
-				// Prevent loop: only if the Person property is not equal to this new detail: update().
-				if($oPerson !== null && $oPerson->Get($sContactMethod) != $sContactDetail) {
-					$oPerson->Set($sContactMethod, $sContactDetail);
-					$oPerson->DBUpdate();					
-				}
-				
-			}
-			
-			
-		}
+	public function AfterContactMethodChanged($oObject) {
 		
 		// If contact info on the Person object changed, update ContactMethods if necessary
-		elseif($oObject instanceof Person) {
+		// Do NOT port info back from ContactMethod to Person. Reason: if a ContactMethod is created for outdated information, it will update person with old info.
+		// It's also not recommended to list changes here, since some attribute values might simply be new or altered in different parts.
+		if($oObject instanceof Person) {
 			
-			// Check if a ContactMethod exists for email, phone, mobile_phone. 
+			// Check if a ContactMethod exists for changed attributes: email, phone, mobile_phone. 
 			// If not, create.
+			/** @var \Person $oPerson iTop Person */
 			$oPerson = $oObject;
-			$aPreviousValues = $oObject->ListPreviousValuesForUpdatedAttributes();
-			$aUpdatedAttCodes = array_keys($aPreviousValues);
+	
+			// Obtain current ContactMethods
+			$sOQL = 'SELECT ContactMethod WHERE person_id = :person_id';
+			$oSet_CurrentContactMethods = new DBObjectSet(DBObjectSearch::FromOQL($sOQL), [], [
+				'person_id' => $oPerson->GetKey()
+			]);
 			
-			$aContactMethods = ['email', 'phone', 'mobile_phone'];
-			
-			foreach($aContactMethods as $sContactMethod) {
-				
-				// Is updated? If not, just try next method
-				if(in_array($sContactMethod, $aUpdatedAttCodes) == true) {
-					
-					// Did the previous contact details already exist as a ContactMethod?
-					$sOQL = 'SELECT ContactMethod WHERE person_id = :person_id AND contact_method LIKE :contact_method AND contact_detail LIKE :contact_detail';
-					$oSet_OldContactMethods = new DBObjectSet(DBObjectSearch::FromOQL($sOQL), [], [
-						'person_id' => $oPerson->GetKey(),
-						'contact_method' => $sContactMethod,
-						'contact_detail' => $aPreviousValues[$sContactMethod]
-					]);
-					
-					$oOldContactMethod = $oSet_OldContactMethods->Fetch();
-										
-					// The contact method did not exist yet.
-					// Save the previous contact method.
-					// Save this for historical reasons.
-					if($oOldContactMethod === null) {
-						
-						$oOldContactMethod = MetaModel::NewObject('ContactMethod', [
-							'person_id' => $oPerson->GetKey(),
-							'contact_method' => $sContactMethod,
-							'contact_detail' =>$aPreviousValues[$sContactMethod]
-						]);
-						$oOldContactMethod->DBInsert();	
-						
-					}
-					
-				}
+			foreach(['email', 'phone', 'mobile_phone'] as $sContactMethod) {
 				
 				// Current contact detail	
 				$sContactDetail = $oPerson->Get($sContactMethod);
+				$bIsNew = true;
 			
 				// Should a new ContactMethod be created?
 				if($sContactMethod == 'phone' && $sContactDetail == '+00 000 000 000') {
 					// Do nothing
 				}
 				elseif($sContactDetail != '') {
-						
-					// Select ContactMethod
-					// Use LIKE without wildcards to enforce case insensitivity (email)
-					$sOQL = 'SELECT ContactMethod WHERE person_id = :person_id AND contact_method LIKE :contact_method AND contact_detail LIKE :contact_detail';
-					$oSet_ContactMethods = new DBObjectSet(DBObjectSearch::FromOQL($sOQL), [], [
-						'person_id' => $oPerson->GetKey(),
-						'contact_method' => $sContactMethod,
-						'contact_detail' => $sContactDetail
-					]);
 					
-					// There shouldn't be a ContactMethod with the same details if a new one is added
-					if($oSet_ContactMethods->Count() == 0) {
+					// Rewind since this is a loop
+					$oSet_CurrentContactMethods->Rewind();
+					
+					while($oExistingContactMethod = $oSet_CurrentContactMethods->Fetch()) {
+						
+						if($oExistingContactMethod->Get('contact_method') == $sContactMethod) {
+							switch($sContactMethod) {
+								case 'phone':
+								case 'mobile_phone':
+									// Exact
+									if($oExistingContactMethod->Get('contact_detail') == $sContactDetail) {
+										$bIsNew = false;
+										break 2;
+									}
+									break;
+								case 'email':
+									// Same value, case insensitive
+									if(strtolower($oExistingContactMethod->Get('contact_detail')) == strtolower($sContactDetail)) {
+										$bIsNew = false;
+										break 2;
+									}
+									break;
+								default:
+									break;
+							}
+						}
+						
+					}
+					
+					if($bIsNew == true) {
 						
 						// Create ContactMethod
 						$oContactMethod = MetaModel::NewObject('ContactMethod', [
@@ -226,6 +189,7 @@ class ApplicationObjectExtension_ContactMethod implements iApplicationObjectExte
 							'contact_method' => $sContactMethod,
 							'contact_detail' => $sContactDetail
 						]);
+						
 						$oContactMethod->DBInsert();	
 						
 					}
@@ -234,24 +198,26 @@ class ApplicationObjectExtension_ContactMethod implements iApplicationObjectExte
 				
 				// Per design, outdated ContactMethods are NOT deleted automatically.
 				// After all, it's possible there is a new contact method which doesn't invalidate the old one.
-				
-			}			
+			
+			}
+			
 		}		
 	}
 	
 	/**
 	 * 
 	 * Updates related Person object each time a ContactMethod is removed.
-	 * It checks if it's one of the default contact details (phone, mobile phone, email) and sets the info to blank or the last other known info.
+	 * It checks if it's one of the default contact details (phone, mobile phone, email) and sets the info to blank or the last known info.
 	 *  	 
 	 */
-	public function OnContactMethodDeleted($oObject) {
+	public function AfterContactMethodDeleted($oObject) {
 		
 		// If a ContactMethod is deleted, the related Person object should be updated to reflect these changes 
 		if($oObject instanceof ContactMethod) {
 			
 			$oContactMethod = $oObject;
 			$sContactMethod = $oContactMethod->Get('contact_method');
+			$sContactDetail = $oContactMethod->Get('contact_detail');
 			
 			switch($sContactMethod) {
 				
@@ -268,29 +234,34 @@ class ApplicationObjectExtension_ContactMethod implements iApplicationObjectExte
 					// Only 1 person should be retrieved
 					$oPerson = $oSet_Person->Fetch();
 
-					// Set to empty
-					$oPerson->Set($sContactMethod, '');
-					
-					// But what if a fallback is possible, to update the Person object with another most recent ContactMethod of the same contact_method type?
-					// Since this query is executed before ContactMethod is really deleted: 
-					// Don't include the current (deleted) ContactMethod object in t his query.
-					$sOQL = 'SELECT ContactMethod WHERE person_id = :person_id AND contact_method = :contact_method AND id != :id';			
-					
-					// Return maximum one. Descending by id.
-					$oSet_ContactMethod = new DBObjectSet(DBObjectSearch::FromOQL($sOQL), ['id' => false], [
-						'person_id' => $oPerson->GetKey(),
-						'contact_method' => $sContactMethod,
-						'id' => $oContactMethod->GetKey()
-					], [], 1);
+					// Set Person's attribute value to empty if the value was the same as the one for the ContactMethod that has been deleted
+					if($oPerson->Get($sContactMethod) == $sContactDetail) {
 						
-					// But maybe there's another last known ContactMethod.
-					// Simply look at 'id' and take the last one, not date of last change (yet)
-					while($oContactMethod = $oSet_ContactMethod->Fetch()){
-						$oPerson->Set($sContactMethod, $oContactMethod->Get('contact_detail'));	
+						$oPerson->Set($sContactMethod, '');
+							
+						
+						// But what if a fallback is possible, to update the Person object with another most recent ContactMethod of the same contact_method type?
+						// Since this query is executed before ContactMethod is really deleted: 
+						// Don't include the current (deleted) ContactMethod object in t his query.
+						$sOQL = 'SELECT ContactMethod WHERE person_id = :person_id AND contact_method = :contact_method AND id != :id';			
+						
+						// Return maximum one. Descending by id.
+						$oSet_ContactMethod = new DBObjectSet(DBObjectSearch::FromOQL($sOQL), ['id' => false], [
+							'person_id' => $oPerson->GetKey(),
+							'contact_method' => $sContactMethod,
+							'id' => $oContactMethod->GetKey()
+						], [], 1);
+							
+						// But maybe there's another last known ContactMethod.
+						// Simply look at 'id' and take the last one, not date of last change (yet)
+						while($oPreviousContactMethod = $oSet_ContactMethod->Fetch()){
+							$oPerson->Set($sContactMethod, $oPreviousContactMethod->Get('contact_detail'));	
+						}
+						
+						// Reset person attribute
+						$oPerson->DBUpdate();
+						
 					}
-					
-					// Reset person attribute
-					$oPerson->DBUpdate();
 					break;
 					
 				default:
@@ -304,5 +275,51 @@ class ApplicationObjectExtension_ContactMethod implements iApplicationObjectExte
 		
 		return;
 	}
+	
+	/**
+	 * Hook to allow actions to occur before saving the object. 
+	 * Use cases: validation, ...
+	 * 
+	 * @param \Person|\ContactMethod $oObject iTop object
+	 * 
+	 * @return void
+	 */
+	public static function BeforeSaveObject($oObject) {
+		
+		// Get list of ContactMethod extensions
+		$aExtensions = [];
+		foreach(get_declared_classes() as $sClassName) {
+			$aImplementations = class_implements($sClassName);
+			if(in_array('jb_itop_extensions\contact_method\iContactMethodExtension', $aImplementations) == true || in_array('iContactMethodExtension', $aImplementations) == true) {
+				$aExtensions[] = $sClassName;
+			}
+		}
+		
+		// Sort by rank
+		usort($aExtensions, function($a, $b) {
+			return $a::$fRank <=> $b::$fRank;
+		});
+		
+		// Run hook
+		foreach($aExtensions as $sClassName) {
+			$sClassName::BeforeSaveObject($oObject);
+		}	
+		
+	}
+	
+}
+
+/**
+ * Interface iContactMethodExtension. Everything implementing this interface will run before contact info is processed. Ideal for validation mechanisms.
+ */
+interface iContactMethodExtension {
+	
+	/**
+	 * Hook which allows to run a validation or perform operations before processing contact info
+	 * 
+	 * @param \Person|\ContactMethod $oObject iTop object
+	 * @return void
+	 */
+	public function BeforeSaveObject($oObject);
 	
 }

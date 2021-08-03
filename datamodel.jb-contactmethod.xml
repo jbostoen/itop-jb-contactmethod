@@ -3,7 +3,7 @@
 	<classes>
 		<class id="Person">
 			<fields>
-				<field id="contactmethods_list" xsi:type="AttributeLinkedSet" _delta="define">   
+				<field id="contactmethods_list" xsi:type="AttributeLinkedSet" _delta="define">
 					<linked_class>ContactMethod</linked_class>
 					<ext_key_to_me>person_id</ext_key_to_me>
 					<edit_mode>actions</edit_mode>
@@ -11,11 +11,27 @@
 					<count_max>0</count_max>
 				</field>
 			</fields>
+			<methods>
+				<method id="ComputeValues" _delta="define">
+					<static>false</static>
+					<access>public</access>
+					<type>Overload-DBObject</type>
+					<code><![CDATA[	
+					
+	public function ComputeValues() {
+						
+		\jb_itop_extensions\contact_method\ApplicationObjectExtension_ContactMethod::BeforeSaveObject($this);
+	
+	}
+				
+					]]></code>
+				</method>
+			</methods>
 			<presentation>
 				<details>
 					<items>
 						<item id="contactmethods_list">
-						  <rank>110</rank>
+							<rank>110</rank>
 						</item>
 					</items>
 				</details>
@@ -75,11 +91,26 @@
 				</field>
 				<field id="contact_detail" xsi:type="AttributeString">
 					<sql>contact_detail</sql>
-					<default_value></default_value>
+					<default_value/>
 					<is_null_allowed>false</is_null_allowed>
 				</field>
 			</fields>
-			<methods/>
+			<methods>
+				<method id="ComputeValues" _delta="define">
+					<static>false</static>
+					<access>public</access>
+					<type>Overload-DBObject</type>
+					<code><![CDATA[	
+					
+	public function ComputeValues() {
+						
+		\jb_itop_extensions\contact_method\ApplicationObjectExtension_ContactMethod::BeforeSaveObject($this);
+	
+	}
+				
+					]]></code>
+				</method>
+			</methods>
 			<presentation>
 				<details>
 					<items>
@@ -120,7 +151,7 @@
 						</item>
 					</items>
 				</list>
-			</presentation>			
+			</presentation>
 		</class>
 	</classes>
 </itop_design>
