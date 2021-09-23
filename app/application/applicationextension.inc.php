@@ -142,15 +142,27 @@ class ApplicationObjectExtension_ContactMethod implements iApplicationObjectExte
 			
 			foreach(['email', 'phone', 'mobile_phone'] as $sContactMethod) {
 				
-				// Current contact detail	
-				$sContactDetail = $oPerson->Get($sContactMethod);
 				$bIsNew = true;
 			
+				// Init ContactMethod (don't save yet)
+				$oNewContactMethod = MetaModel::NewObject('ContactMethod', [
+					'person_id' => $oPerson->GetKey(),
+					'contact_method' => $sContactMethod,
+					'contact_detail' => $sCurrentContactDetail
+				]);
+				
+				// Call this method already to make sure for instance phone numbers are formatted the same way
+				// The formatting could be modified by additional extensions such as jb-contactmethod-validation
+				self::BeforeSaveObject($oNewContactMethod);
+				
+				// Current contact detail	
+				$sCurrentContactDetail = $oNewContactMethod->Get('contact_detail');
+				
 				// Should a new ContactMethod be created?
-				if($sContactMethod == 'phone' && $sContactDetail == '+00 000 000 000') {
+				if($sContactMethod == 'phone' && $sCurrentContactDetail == '+00 000 000 000') {
 					// Do nothing
 				}
-				elseif($sContactDetail != '') {
+				elseif($sCurrentContactDetail != '') {
 					
 					// Rewind since this is a loop
 					$oSet_CurrentContactMethods->Rewind();
@@ -161,15 +173,15 @@ class ApplicationObjectExtension_ContactMethod implements iApplicationObjectExte
 							switch($sContactMethod) {
 								case 'phone':
 								case 'mobile_phone':
-									// Exact
-									if($oExistingContactMethod->Get('contact_detail') == $sContactDetail) {
+									// Exact (strip characters to avoid all sorts of re-writing by additional extensions)
+									if($oExistingContactMethod->Get('contact_detail') == $sCurrentContactDetail) {
 										$bIsNew = false;
 										break 2;
 									}
 									break;
 								case 'email':
 									// Same value, case insensitive
-									if(strtolower($oExistingContactMethod->Get('contact_detail')) == strtolower($sContactDetail)) {
+									if(strtolower($oExistingContactMethod->Get('contact_detail')) == strtolower($sCurrentContactDetail)) {
 										$bIsNew = false;
 										break 2;
 									}
@@ -183,14 +195,7 @@ class ApplicationObjectExtension_ContactMethod implements iApplicationObjectExte
 					
 					if($bIsNew == true) {
 						
-						// Create ContactMethod
-						$oContactMethod = MetaModel::NewObject('ContactMethod', [
-							'person_id' => $oPerson->GetKey(),
-							'contact_method' => $sContactMethod,
-							'contact_detail' => $sContactDetail
-						]);
-						
-						$oContactMethod->DBInsert();	
+						$oNewContactMethod->DBInsert();	
 						
 					}
 				
