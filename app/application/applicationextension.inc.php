@@ -148,7 +148,7 @@ class ApplicationObjectExtension_ContactMethod implements iApplicationObjectExte
 				$oNewContactMethod = MetaModel::NewObject('ContactMethod', [
 					'person_id' => $oPerson->GetKey(),
 					'contact_method' => $sContactMethod,
-					'contact_detail' => $this->Get($sContactMethod) // Get contact detail of Person
+					'contact_detail' => $oPerson->Get($sContactMethod) // Get contact detail of Person
 				]);
 				
 				// Call this method already to make sure for instance phone numbers are formatted the same way
