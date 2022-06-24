@@ -1,6 +1,6 @@
 # jb-contactmethod
 
-Copyright (c) 2019-2021 Jeffrey Bostoen
+Copyright (c) 2019-2022 Jeffrey Bostoen
 
 [![License](https://img.shields.io/github/license/jbostoen/iTop-custom-extensions)](https://github.com/jbostoen/iTop-custom-extensions/blob/master/license.md)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/jbostoen)
@@ -12,6 +12,9 @@ Please get in touch to discuss the terms: **info@jeffreybostoen.be** / https://j
 
 
 ## What?
+
+⚠️ The current version is broken because listing the changed attributes is incorrect.
+
 Adds a contact methods tab to a Contact. 
 Can easily be extended to support all sorts of data. Dropdown to pick method (e.g. phone, email, social media) and a basic text box (255 characters).
 
@@ -24,7 +27,6 @@ Actions:
   * This is because of legacy code which still creates a contact method of info that is being removed from the person's details.
   * This is done because removal is sometimes adding an alternative email address, while the previous info is still valid too.
 
-The current version is broken because listing the changed attributes is incorrect.
 
 
 ## Cookbook

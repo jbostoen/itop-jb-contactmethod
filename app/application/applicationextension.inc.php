@@ -153,7 +153,7 @@ class ApplicationObjectExtension_ContactMethod implements iApplicationObjectExte
 				
 				// Call this method already to make sure for instance phone numbers are formatted the same way
 				// The formatting could be modified by additional extensions such as jb-contactmethod-validation
-				self::BeforeSaveObject($oNewContactMethod);
+				static::BeforeSaveObject($oNewContactMethod);
 				
 				// Current contact detail	
 				$sCurrentContactDetail = $oNewContactMethod->Get('contact_detail');
@@ -325,6 +325,6 @@ interface iContactMethodExtension {
 	 * @param \Person|\ContactMethod $oObject iTop object
 	 * @return void
 	 */
-	public function BeforeSaveObject($oObject);
+	public static function BeforeSaveObject($oObject);
 	
 }
