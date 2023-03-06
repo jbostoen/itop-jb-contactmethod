@@ -1,7 +1,7 @@
 <?php
 
 /**
- * @copyright   Copyright (C) 2019 Jeffrey Bostoen
+ * @copyright   Copyright (c) 2019-2023 Jeffrey Bostoen
  * @license     https://www.gnu.org/licenses/gpl-3.0.en.html
  *
  * Localized data
@@ -20,10 +20,14 @@ Dict::Add('EN US', 'English', 'English', array(
 	
 	'Class:ContactMethod/Attribute:person_id' => 'Person',
 	'Class:ContactMethod/Attribute:contact_method' => 'Contact method',
+	'Class:ContactMethod/Attribute:contact_method+' => 'Known contact method to get in touch with this person.',
 	'Class:ContactMethod/Attribute:contact_method/Value:phone' => 'Phone',
 	'Class:ContactMethod/Attribute:contact_method/Value:mobile_phone' => 'Mobile phone',
 	'Class:ContactMethod/Attribute:contact_method/Value:email' => 'Email',
+	'Class:ContactMethod/Attribute:contact_method/Value:github' => 'GitHub',
+	'Class:ContactMethod/Attribute:contact_method/Value:linkedin' => 'LinkedIn',
 	'Class:ContactMethod/Attribute:contact_detail' => 'Contact detail',
+	'Class:ContactMethod/Attribute:contact_detail+' => 'Contact detail should be the user id (UID) for this user, although there is no validation check.',
 	
 	'Errors/ContactMethod/InvalidPhoneNumber' => 'Invalid phone number.',
 	'Errors/ContactMethod/InvalidMobilePhoneNumber' => 'Invalid mobile phone number.',

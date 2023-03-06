@@ -5,11 +5,11 @@
 	<author><![CDATA[jbostoen]]></author>
 	<label><![CDATA[Datamodel: Contact Method]]></label>
 	<description><![CDATA[Adds Contact Method tab to Person. See read me of this extension.]]></description>
-	<version>2.7.220624</version>
-	<release_date>2022-06-24</release_date>
+	<version>2.7.230306</version>
+	<release_date>2023-03-06</release_date>
 	<version_description><![CDATA[]]></version_description>
 	<itop_version_min>2.7.0</itop_version_min>
 	<status>stable</status>
 	<mandatory>false</mandatory>
-	<more_info_url>https://jeffreybostoen.be</more_info_url>
+	<more_info_url><![CDATA[https://jeffreybostoen.be]]></more_info_url>
 </extension>

@@ -84,9 +84,11 @@
 					<sql>contact_method</sql>
 					<display_style>list</display_style>
 					<values>
-						<value id="phone">phone</value>
-						<value id="mobile_phone">mobile_phone</value>
 						<value id="email">email</value>
+						<value id="github">github</value>
+						<value id="linkedin">linkedin</value>
+						<value id="mobile_phone">mobile_phone</value>
+						<value id="phone">phone</value>
 					</values>
 				</field>
 				<field id="contact_detail" xsi:type="AttributeString">
