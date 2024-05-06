@@ -11,22 +11,6 @@
 					<count_max>0</count_max>
 				</field>
 			</fields>
-			<methods>
-				<method id="ComputeValues" _delta="define">
-					<static>false</static>
-					<access>public</access>
-					<type>Overload-DBObject</type>
-					<code><![CDATA[	
-					
-	public function ComputeValues() {
-						
-		\jb_itop_extensions\contact_method\ApplicationObjectExtension_ContactMethod::BeforeSaveObject($this);
-	
-	}
-				
-					]]></code>
-				</method>
-			</methods>
 			<presentation>
 				<details>
 					<items>
@@ -97,22 +81,6 @@
 					<is_null_allowed>false</is_null_allowed>
 				</field>
 			</fields>
-			<methods>
-				<method id="ComputeValues" _delta="define">
-					<static>false</static>
-					<access>public</access>
-					<type>Overload-DBObject</type>
-					<code><![CDATA[	
-					
-	public function ComputeValues() {
-						
-		\jb_itop_extensions\contact_method\ApplicationObjectExtension_ContactMethod::BeforeSaveObject($this);
-	
-	}
-				
-					]]></code>
-				</method>
-			</methods>
 			<presentation>
 				<details>
 					<items>
