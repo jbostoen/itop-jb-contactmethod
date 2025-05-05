@@ -28,7 +28,6 @@ SetupWebPage::AddModule(
                 //
                 'datamodel' => array(
 			'model.jb-contactmethod.php',
-			'app/application/applicationextension.inc.php',
                 ),
                 'webservice' => array(
 

@@ -1,6 +1,6 @@
 # jb-contactmethod
 
-Copyright (c) 2019-2024 Jeffrey Bostoen
+Copyright (c) 2019-2023 Jeffrey Bostoen
 
 [![License](https://img.shields.io/github/license/jbostoen/iTop-custom-extensions)](https://github.com/jbostoen/iTop-custom-extensions/blob/master/license.md)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/jbostoen)
@@ -13,9 +13,7 @@ Please get in touch to discuss the terms: **info@jeffreybostoen.be** / https://j
 
 ## What?
 
-⚠️ The current version is broken because listing the changed attributes is incorrect.
-
-Adds a contact methods tab to a Contact. 
+Adds a tab to the Person class to document various contact methods.
 Can easily be extended to support all sorts of data. Dropdown to pick method (e.g. phone, email, social media) and a basic text box (255 characters).
 
 Actions:
